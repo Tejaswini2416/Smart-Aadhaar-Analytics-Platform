@@ -191,7 +191,7 @@ Smart-Aadhaar-Analytics-Platform/
 
 Tejaswini
 
-Deepthi
+Deepthisree
 
 Aashritha
 
