@@ -1,0 +1,29 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "pincode": "500001" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[78.47,17.37],[78.49,17.37],[78.49,17.39],[78.47,17.39],[78.47,17.37]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "pincode": "500002" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[78.49,17.37],[78.51,17.37],[78.51,17.39],[78.49,17.39],[78.49,17.37]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "pincode": "500003" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[78.47,17.39],[78.49,17.39],[78.49,17.41],[78.47,17.41],[78.47,17.39]]]
+      }
+    }
+  ]
+}
