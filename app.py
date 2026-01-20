@@ -26,14 +26,14 @@ st.set_page_config(
 # API Key Loader (ENV ONLY)
 # ================================
 def get_groq_api_key():
-    return os.getenv("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")
+    return os.getenv("GROQ_API_KEY")
 
 API_KEY = get_groq_api_key()
 
 # ================================
 # Header
 # ================================
-st.title("🪪 Smart Aadhaar Analytics Platform")
+st.title("Smart Aadhaar Analytics Platform")
 st.caption(
     "Mandal-level enrolment prediction, anomaly detection & decision support"
 )
