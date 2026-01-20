@@ -1,62 +1,118 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import os
 
-# ==================================
+from pincode_map import show_pincode_map
+
+# ================================
+# Optional Groq AI Assistant
+# ================================
+try:
+    from groq import Groq
+    GROQ_AVAILABLE = True
+except ImportError:
+    GROQ_AVAILABLE = False
+
+# ================================
 # Page Config
-# ==================================
+# ================================
 st.set_page_config(
-    page_title="Smart Aadhaar Analytics",
+    page_title="Smart Aadhaar Analytics Platform",
     layout="wide"
 )
 
+# ================================
+# API Key Loader
+# ================================
+def get_groq_api_key():
+    try:
+        return st.secrets["GROQ_API_KEY"]
+    except Exception:
+        return os.getenv("GROQ_API_KEY")
+
+# ================================
+# Header
+# ================================
 st.title("🪪 Smart Aadhaar Analytics Platform")
-st.caption("Mandal-level enrolment prediction, anomaly detection & regional insights")
+st.caption(
+    "Mandal-level enrolment prediction, anomaly detection & decision support"
+)
 
-# ==================================
-# Load Real Dataset
-# ==================================
+if get_groq_api_key() and GROQ_AVAILABLE:
+    st.success("🟢 AI Assistant: ONLINE")
+else:
+    st.info("🟡 AI Assistant: OFFLINE (dashboard insights still available)")
+
+# ================================
+# Helper Functions
+# ================================
+def anomaly_severity(current, avg):
+    ratio = abs(current - avg) / avg
+    if ratio > 0.6:
+        return "High", 100
+    elif ratio > 0.3:
+        return "Medium", 70
+    else:
+        return "Low", 40
+
+# ================================
+# AI Chatbot
+# ================================
+def groq_chatbot(question, context):
+    api_key = get_groq_api_key()
+    if not api_key or not GROQ_AVAILABLE:
+        return (
+            "AI assistant is running in offline mode.\n\n"
+            "You can interpret predictions, risk scores and actions "
+            "directly from the dashboard insights above."
+        )
+
+    client = Groq(api_key=api_key)
+
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[
+            {"role": "system", "content": "You are an Aadhaar analytics assistant."},
+            {"role": "user", "content": f"{context}\n\nQuestion: {question}"}
+        ],
+        temperature=0.4
+    )
+    return response.choices[0].message.content
+
+# ================================
+# Load Dataset
+# ================================
 df = pd.read_csv("data/aadhaar_data.csv")
+df["date"] = pd.to_datetime(df["date"], dayfirst=True, errors="coerce")
 
-df['date'] = pd.to_datetime(df['date'], dayfirst=True, errors='coerce')
+df["Total_Enrolments"] = (
+    df["age_0_5"] + df["age_5_17"] + df["age_18_greater"]
+)
 
-# Total enrolments
-df['Total_Enrolments'] = df[
-    ['age_0_5', 'age_5_17', 'age_18_greater']
-].sum(axis=1)
-
-# Mandal-level aggregation (Pincode based)
 mandal_df = df.groupby(
-    ['pincode', 'date'], as_index=False
-).agg({
-    'age_0_5': 'sum',
-    'age_5_17': 'sum',
-    'age_18_greater': 'sum',
-    'Total_Enrolments': 'sum'
-})
+    ["pincode", "date"], as_index=False
+)["Total_Enrolments"].sum()
 
-mandal_df['Month'] = mandal_df['date'].dt.month
-mandal_df['Year'] = mandal_df['date'].dt.year
+mandal_df["Month"] = mandal_df["date"].dt.month
+mandal_df["Year"] = mandal_df["date"].dt.year
 
-# Mandal historical average (important feature)
-mandal_avg = mandal_df.groupby(
-    'pincode'
-)['Total_Enrolments'].mean().to_dict()
+mandal_avg = mandal_df.groupby("pincode")["Total_Enrolments"].mean().to_dict()
 
-# ==================================
+# ================================
 # Load Models
-# ==================================
-xgb_model = joblib.load("models/xgboost_model.pkl")
+# ================================
+rf_model = joblib.load("models/rf_model.pkl")
 iso_model = joblib.load("models/isolation_forest.pkl")
 
-# ==================================
+# ================================
 # Sidebar Inputs
-# ==================================
-st.sidebar.header("📍 Mandal-based Inputs")
+# ================================
+st.sidebar.header("📍 Mandal Inputs")
 
 pincode = st.sidebar.selectbox(
     "Select Mandal (Pincode)",
-    sorted(mandal_df['pincode'].unique())
+    sorted(mandal_df["pincode"].unique())
 )
 
 month = st.sidebar.slider("Month", 1, 12, 9)
@@ -66,100 +122,144 @@ age_0_5 = st.sidebar.number_input("Age 0–5", 0, 3000, 300)
 age_5_17 = st.sidebar.number_input("Age 5–17", 0, 3000, 180)
 age_18 = st.sidebar.number_input("Age 18+", 0, 3000, 25)
 
-# ==================================
-# Mandal-Level Prediction
-# ==================================
-st.subheader("📈 Mandal-Level Enrolment Prediction")
-
-mandal_feature = mandal_avg.get(
-    pincode, mandal_df['Total_Enrolments'].mean()
+view_mode = st.sidebar.radio(
+    "📊 View Mode",
+    ["Trend View", "Pincode Map View"]
 )
+
+# ================================
+# Enrolment Prediction
+# ================================
+st.header("📈 Enrolment Prediction")
 
 input_df = pd.DataFrame({
-    'Month': [month],
-    'Year': [year],
-    'age_0_5': [age_0_5],
-    'age_5_17': [age_5_17],
-    'age_18_greater': [age_18],
+    "Month": [month],
+    "Year": [year],
+    "age_0_5": [age_0_5],
+    "age_5_17": [age_5_17],
+    "age_18_greater": [age_18]
 })
 
-predicted_enrolments = int(
-    xgb_model.predict(input_df)[0]
-)
+prediction = int(rf_model.predict(input_df)[0])
 
 st.success(
-    f"Predicted Total Enrolments for Mandal {pincode}: "
-    f"**{predicted_enrolments}**"
+    f"Predicted Total Enrolments for Mandal {pincode}: **{prediction}**"
 )
 
-# ==================================
-# Anomaly Detection & Explanation
-# ==================================
-st.subheader("🚨 Anomaly Detection & Explanation")
+# ================================
+# 🔴 UPDATED ANOMALY SECTION (ONLY CHANGE)
+# ================================
+st.header("🚨 Anomaly Detection & Risk Analysis")
 
-mandal_data = mandal_df[
-    mandal_df['pincode'] == pincode
-].copy()
-
-mandal_data['Anomaly'] = iso_model.predict(
-    mandal_data[['Total_Enrolments']]
+mandal_data = mandal_df[mandal_df["pincode"] == pincode].copy()
+mandal_data["anomaly"] = iso_model.predict(
+    mandal_data[["Total_Enrolments"]]
 )
 
-anomalies = mandal_data[
-    mandal_data['Anomaly'] == -1
-]
+anomalies = mandal_data[mandal_data["anomaly"] == -1]
 
-if len(anomalies) > 0:
-    st.error("⚠️ Anomaly spike(s) detected in this mandal")
+if anomalies.empty:
+    st.success("✅ No anomalies detected for this mandal.")
+else:
+    st.error("⚠️ Anomalies Detected")
 
-    latest_anomaly = anomalies.sort_values(
-        'date', ascending=False
-    ).iloc[0]
+    for _, row in anomalies.iterrows():
+        current_val = row["Total_Enrolments"]
+        avg_val = mandal_avg[pincode]
 
-    current_val = latest_anomaly['Total_Enrolments']
-    avg_val = mandal_avg[pincode]
+        direction = "Spike" if current_val > avg_val else "Drop"
+        severity, risk = anomaly_severity(current_val, avg_val)
 
-    if current_val > avg_val:
-        reason = (
-            "Unusual spike observed. Possible reasons include:\n"
-            "- Special Aadhaar enrolment drives\n"
-            "- Migration or population inflow\n"
-            "- Backlog clearance at enrolment centers\n"
-            "- Seasonal enrolment surge"
-        )
-    else:
-        reason = (
-            "Unusual drop observed. Possible reasons include:\n"
-            "- Technical issues at enrolment centers\n"
-            "- Temporary center shutdowns\n"
-            "- Reduced footfall or seasonal decline"
-        )
+        if direction == "Spike":
+            causes = (
+                "Special enrolment drives, migration inflow, "
+                "backlog clearance or awareness campaigns."
+            )
+            actions = (
+                "Deploy temporary centres, increase staff, "
+                "conduct audits and close monitoring."
+            )
+        else:
+            causes = (
+                "Temporary centre shutdowns, technical failures, "
+                "staff shortage or seasonal low demand."
+            )
+            actions = "No immediate action required."
 
-    st.markdown("### 📌 Likely Reason")
-    st.info(reason)
+        with st.container(border=True):
+            st.markdown(
+                f"""
+**📅 Date:** {row['date'].date()}  
+**📊 Enrolments:** {current_val}  
+**📉 Direction:** {direction}  
+**🔥 Severity:** {severity}  
+**⚠️ Risk Score:** {risk}/100  
 
-    st.markdown("### 📋 Anomalous Records")
-    st.dataframe(
-        anomalies[['date', 'Total_Enrolments']]
+**💡 Likely Causes:**  
+{causes}
+
+**🛠 Recommended Actions:**  
+{actions}
+"""
+            )
+
+# ================================
+# Visualization
+# ================================
+if view_mode == "Trend View":
+    st.header("📊 Mandal Enrolment Trend")
+    st.line_chart(
+        mandal_data.set_index("date")["Total_Enrolments"]
     )
 
 else:
-    st.success("✅ No anomaly spikes detected for this mandal")
+    st.header("🗺️ Pincode-wise Aadhaar Enrolment Map")
 
-# ==================================
-# Trend Visualization
-# ==================================
-st.subheader("📊 Mandal Enrolment Trend")
+    map_year = st.selectbox(
+        "Select Year",
+        sorted(mandal_df["Year"].dropna().unique())
+    )
+    map_month = st.selectbox(
+        "Select Month",
+        sorted(mandal_df["Month"].dropna().unique())
+    )
 
-st.line_chart(
-    mandal_data.set_index('date')['Total_Enrolments']
+    filtered_map = mandal_df[
+        (mandal_df["Year"] == map_year) &
+        (mandal_df["Month"] == map_month)
+    ]
+
+    if filtered_map.empty:
+        st.warning("No data for selected period. Showing overall view.")
+        filtered_map = mandal_df.copy()
+
+    show_pincode_map(filtered_map, anomalies)
+
+# ================================
+# AI Assistant
+# ================================
+st.markdown("---")
+st.header("🤖 Aadhaar AI Assistant")
+
+question = st.text_input(
+    "Ask about predictions, anomalies, severity, risk or actions:"
 )
 
-# ==================================
+if question:
+    context = f"""
+Pincode: {pincode}
+Predicted Enrolments: {prediction}
+Average Enrolments: {mandal_avg[pincode]}
+Anomaly Detected: {"Yes" if not anomalies.empty else "No"}
+"""
+    with st.spinner("Thinking..."):
+        st.success(groq_chatbot(question, context))
+
+# ================================
 # Footer
-# ==================================
+# ================================
 st.markdown("---")
 st.caption(
-    "Built using XGBoost, Isolation Forest, Streamlit | "
-    "Mandal-level Aadhaar Analytics"
+    "Smart Aadhaar Analytics Platform | "
+    "Prediction • Anomaly Severity • Risk Scoring • Decision Support"
 )
