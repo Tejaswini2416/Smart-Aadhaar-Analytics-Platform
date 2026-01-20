@@ -26,7 +26,7 @@ st.set_page_config(
 # API Key Loader (ENV ONLY)
 # ================================
 def get_groq_api_key():
-    return os.getenv("GROQ_API_KEY")
+    return os.getenv("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")
 
 API_KEY = get_groq_api_key()
 
