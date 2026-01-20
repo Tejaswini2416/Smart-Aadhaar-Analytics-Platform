@@ -1,202 +1,226 @@
 # 🪪 Smart Aadhaar Analytics Platform
 
-An AI-driven analytics platform that provides **mandal-level Aadhaar enrolment prediction**, **anomaly detection**, and **regional insights** to support **data-driven governance**.
+**AI-Driven Enrolment Prediction, Anomaly Detection & Decision Support**
 
-🔗 **Live Application:**
-👉 [https://smart-aadhaar-analytics-platform-aacgm8dawahpniimw3hspt.streamlit.app/](https://smart-aadhaar-analytics-platform-aacgm8dawahpniimw3hspt.streamlit.app/)
+🔗 **Live App:**
+(https://smart-aadhaar-analytics-platform-ms7xn6ryqfapoxe9vnaz9d.streamlit.app/)
 
 ---
 
 ## 📌 Problem Statement
 
-Aadhaar enrolment and update services generate large volumes of data across regions. However:
+Aadhaar enrolment and update systems generate massive volumes of data, but:
 
-* Enrolment demand is difficult to predict
+* Insights are not immediately visible
 * Anomalies (spikes/drops) are detected late
-* Mandal-level (local) insights are not easily visible
-* Decision-making is often reactive
+* Regional (mandal-level) performance is unclear
+* Decision-making is mostly reactive
 
-There is a need for a **smart analytics platform** to enable **proactive planning and early warning**.
-
----
-
-## 🎯 Objectives
-
-This project aims to:
-
-* Predict **future Aadhaar enrolment demand**
-* Detect **abnormal spikes or drops** automatically
-* Provide **mandal-level (pincode-based) insights**
-* Explain anomalies in an interpretable manner
-* Offer a **single interactive dashboard** for decision-makers
+➡️ There is a need for an **AI-driven analytics platform** that transforms raw Aadhaar data into **actionable governance insights**.
 
 ---
 
-## 📂 Dataset
+## 🎯 Solution Overview
 
-* **Dataset Name:** Aadhaar Enrolment Statistics by State, District and Age Group
-* **Source:** UIDAI Open Data (data.gov.in)
-* **Nature:** Aggregated & anonymised (no personal/biometric data)
+The **Smart Aadhaar Analytics Platform** is a **single-window decision dashboard** that:
 
-### Key Features:
+* Predicts future Aadhaar enrolments
+* Detects abnormal enrolment patterns automatically
+* Explains anomalies with severity & risk scoring
+* Recommends policy actions
+* Visualizes mandal-level trends and spatial intensity
+* Supports officials using an AI assistant
 
-* Date
-* State
-* District
-* Pincode (used as mandal proxy)
-* Enrolments by age group:
-
-  * 0–5 years
-  * 5–17 years
-  * 18+ years
+⚠️ **No personal or biometric data is used.**
+All data is anonymized and aggregated.
 
 ---
 
-## ⚙️ System Architecture
+## 🚀 Key Features
 
-```
-Data Ingestion (UIDAI Open Data)
-        ↓
-Data Preprocessing & Feature Engineering
-        ↓
-XGBoost → Enrolment Prediction
-Isolation Forest → Anomaly Detection
-K-Means → Regional Clustering
-        ↓
-Streamlit Interactive Dashboard
-```
+### 🔹 Mandal-Level Enrolment Prediction
 
----
+* Predicts future enrolments using ML
+* Inputs:
 
-## 🤖 Models Used
+  * Month, Year
+  * Age groups (0–5, 5–17, 18+)
+* Output:
 
-### 1️⃣ XGBoost – Enrolment Prediction
-
-* Predicts total Aadhaar enrolments
-* Uses age group distribution and temporal features
-* Handles non-linear patterns efficiently
-
-**Evaluation Metrics:** RMSE, MAE, R² Score
+  * Predicted total enrolments
+* Helps in **proactive resource planning**
 
 ---
 
-### 2️⃣ Isolation Forest – Anomaly Detection
+### 🔹 Automated Anomaly Detection
 
-* Detects unusual spikes or drops in enrolments
-* Unsupervised (no labeled anomalies required)
-* Works efficiently on real-world data
+* Uses **Isolation Forest (unsupervised ML)**
+* Detects:
 
-**Output:** Normal / Anomaly flags with explanation
-
----
-
-### 3️⃣ K-Means – Regional Clustering
-
-* Groups mandals based on enrolment behaviour
-* Identifies high, medium, and low-activity regions
-
-**Evaluation Metric:** Silhouette Score
+  * Sudden spikes
+  * Sudden drops
+* Works without labeled anomaly data
 
 ---
 
-## 📊 Dashboard Features
+### 🔹 Anomaly Severity & Risk Scoring
 
-* 📈 Mandal-level enrolment prediction
-* 🚨 Anomaly alerts with **human-readable explanations**
-* 📊 Time-based enrolment trends
-* 🧩 Regional performance classification
-* 🗺️ Map visualization (mandal-level)
-* 📤 Downloadable CSV reports
+For each detected anomaly:
+
+* Direction: **Spike / Drop**
+* Severity: **Low / Medium / High**
+* Risk Score: **0–100**
+* Date-wise anomalous records
 
 ---
 
-## 🧠 Anomaly Explanation Logic
+### 🔹 Explainable AI (Root Cause Analysis)
 
-When an anomaly is detected, the system explains it using historical comparison:
+Automatically explains anomalies:
 
-* **Spike:** Special enrolment drives, migration, backlog clearance
-* **Drop:** Technical issues, center downtime, seasonal decline
+* Migration inflow
+* Special enrolment drives
+* Technical failures
+* Temporary centre shutdowns
+* Seasonal demand changes
 
-This improves **trust and interpretability** for governance use cases.
+---
+
+### 🔹 Policy & Action Recommendations
+
+Based on severity and risk:
+
+* Deploy temporary enrolment centres
+* Increase staff
+* Conduct awareness campaigns
+* Perform audits
+* Continue monitoring (low risk)
+
+---
+
+### 🔹 Pincode-Based Spatial Visualization
+
+* Pincode-wise enrolment intensity map
+* Bubble size = enrolment volume
+* Color = anomaly vs normal
+* No GPS or personal tracking
+
+---
+
+### 🔹 Time-Based Trend Analysis
+
+* Historical enrolment trends by mandal
+* Supports long-term monitoring
+
+---
+
+### 🔹 AI-Powered Aadhaar Assistant
+
+* Natural language Q&A
+* Answers questions like:
+
+  * “Why is this mandal risky?”
+  * “What action should be taken?”
+* Works in:
+
+  * **Online mode** (Groq API)
+  * **Offline mode** (dashboard insights)
+
+---
+
+## 🧠 Machine Learning Models Used
+
+| Model                   | Purpose              |
+| ----------------------- | -------------------- |
+| Random Forest / XGBoost | Enrolment Prediction |
+| Isolation Forest        | Anomaly Detection    |
+
+---
+
+## 📊 Dataset
+
+* Source: **data.gov.in – Aadhaar enrolment statistics**
+* Fields include:
+
+  * Date
+  * State / District
+  * Pincode (mandal proxy)
+  * Age-wise enrolment counts
+
+📌 No Aadhaar numbers, names, or biometric data are used.
 
 ---
 
 ## 🛠️ Tech Stack
 
-* **Programming Language:** Python
-* **Machine Learning:** XGBoost, Isolation Forest, K-Means
-* **Data Processing:** Pandas, NumPy
-* **Visualization & UI:** Streamlit
-* **Model Persistence:** Joblib
-* **Deployment:** Streamlit Community Cloud
+* **Frontend / Dashboard:** Streamlit
+* **Backend / ML:** Python, scikit-learn
+* **Visualization:** Plotly
+* **AI Assistant:** Groq API
+* **Deployment:** Streamlit Cloud
+* **Version Control:** GitHub
 
 ---
 
-## 🚀 How to Run Locally
+## ⚙️ Installation & Local Setup
 
 ```bash
-# Activate virtual environment
-venv\Scripts\activate
-
-# Run the application
-python -m streamlit run app.py
+git clone https://github.com/your-username/smart-aadhaar-analytics-platform.git
+cd smart-aadhaar-analytics-platform
+pip install -r requirements.txt
+streamlit run app.py
 ```
 
 ---
 
-## 📁 Project Structure
+## 🔐 API Key Configuration (AI Assistant)
 
+### Streamlit Cloud (Recommended)
+
+1. Go to **Manage App → Settings → Secrets**
+2. Add:
+
+```toml
+GROQ_API_KEY = "your_api_key_here"
 ```
-Smart-Aadhaar-Analytics-Platform/
-├── app.py
-├── data/
-│   └── aadhaar_data.csv
-├── models/
-│   ├── xgboost_model.pkl
-│   ├── isolation_forest.pkl
-│   ├── kmeans.pkl
-│   └── kmeans_scaler.pkl
-├── requirements.txt
-└── README.md
-```
+
+3. Save & reboot app
+
+### Offline Mode
+
+If API key is not provided, the app **automatically runs in offline mode**
+(core analytics remain fully functional).
 
 ---
 
-## 🏆 Hackathon & Impact Value
+## 🧑‍💻 Developed By
 
-* Enables **proactive resource planning**
-* Supports **early warning systems**
-* Provides **localized (mandal-level) insights**
-* Scalable to district/state/national level
-* Uses **ethical, anonymised public data**
+* **Tejaswini**
+* **Deepthi**
+* **Aashritha**
+* **Shruthi**
+* **Moses**
 
 ---
 
-## 🎤 One-Line Summary (Viva / Pitch)
+## 🏆 Hackathon Highlights
 
-> “The Smart Aadhaar Analytics Platform uses AI to predict mandal-level enrolment demand, detect anomalies, and provide explainable insights for data-driven governance.”
+* AI-driven (not just visualization)
+* Explainable & actionable insights
+* Real-world governance use case
+* Scalable to national level
+* Secure & privacy-preserving design
 
 ---
 
 ## 📌 Future Enhancements
 
-* Real-time data integration
-* Advanced geospatial heatmaps
-* API integration for government dashboards
-* Automated policy recommendation engine
+* Integration with real-time UIDAI feeds
+* District/state comparison dashboards
+* NLP-based policy report generation
+* Role-based access for officials
 
 ---
 
-👩‍💻 Developed by
 
-Tejaswini
-
-Deepthisree
-
-Aashritha
-
-Shruthi
-
-Moses
-
-(Hackathon / Academic Project)
+Just tell me 👍
