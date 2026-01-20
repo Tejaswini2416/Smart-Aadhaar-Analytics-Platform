@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import os
 
 from pincode_map import show_pincode_map
 
@@ -22,13 +23,12 @@ st.set_page_config(
 )
 
 # ================================
-# API Key Loader (STREAMLIT CLOUD SAFE)
+# API Key Loader (ENV ONLY)
 # ================================
 def get_groq_api_key():
-    try:
-        return st.secrets["GROQ_API_KEY"]
-    except Exception:
-        return None
+    return os.getenv("GROQ_API_KEY")
+
+API_KEY = get_groq_api_key()
 
 # ================================
 # Header
@@ -37,8 +37,6 @@ st.title("🪪 Smart Aadhaar Analytics Platform")
 st.caption(
     "Mandal-level enrolment prediction, anomaly detection & decision support"
 )
-
-API_KEY = get_groq_api_key()
 
 if API_KEY and GROQ_AVAILABLE:
     st.success("🟢 AI Assistant: ONLINE")
@@ -148,7 +146,7 @@ st.success(
 )
 
 # ================================
-# 🚨 Anomaly Detection & Risk Analysis
+# Anomaly Detection & Risk Analysis
 # ================================
 st.header("🚨 Anomaly Detection & Risk Analysis")
 
@@ -212,29 +210,9 @@ if view_mode == "Trend View":
     st.line_chart(
         mandal_data.set_index("date")["Total_Enrolments"]
     )
-
 else:
     st.header("🗺️ Pincode-wise Aadhaar Enrolment Map")
-
-    map_year = st.selectbox(
-        "Select Year",
-        sorted(mandal_df["Year"].dropna().unique())
-    )
-    map_month = st.selectbox(
-        "Select Month",
-        sorted(mandal_df["Month"].dropna().unique())
-    )
-
-    filtered_map = mandal_df[
-        (mandal_df["Year"] == map_year) &
-        (mandal_df["Month"] == map_month)
-    ]
-
-    if filtered_map.empty:
-        st.warning("No data for selected period. Showing overall view.")
-        filtered_map = mandal_df.copy()
-
-    show_pincode_map(filtered_map, anomalies)
+    show_pincode_map(mandal_df, anomalies)
 
 # ================================
 # AI Assistant
