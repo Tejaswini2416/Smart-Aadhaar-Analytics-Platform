@@ -23,9 +23,13 @@ st.set_page_config(
 )
 
 # ================================
-# API Key Loader (ENV ONLY)
+# API Key Loader (GITHUB + CLOUD SAFE)
 # ================================
 def get_groq_api_key():
+    # Streamlit Cloud secrets
+    if "GROQ_API_KEY" in st.secrets:
+        return st.secrets["GROQ_API_KEY"]
+    # Local fallback
     return os.getenv("GROQ_API_KEY")
 
 API_KEY = get_groq_api_key()
@@ -33,7 +37,7 @@ API_KEY = get_groq_api_key()
 # ================================
 # Header
 # ================================
-st.title("Smart Aadhaar Analytics Platform")
+st.title("🪪 Smart Aadhaar Analytics Platform")
 st.caption(
     "Mandal-level enrolment prediction, anomaly detection & decision support"
 )
@@ -146,7 +150,7 @@ st.success(
 )
 
 # ================================
-# Anomaly Detection & Risk Analysis
+# 🚨 Anomaly Detection & Risk Analysis
 # ================================
 st.header("🚨 Anomaly Detection & Risk Analysis")
 
