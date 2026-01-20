@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import joblib
-import os
 
 from pincode_map import show_pincode_map
 
@@ -23,13 +22,13 @@ st.set_page_config(
 )
 
 # ================================
-# API Key Loader
+# API Key Loader (STREAMLIT CLOUD SAFE)
 # ================================
 def get_groq_api_key():
     try:
         return st.secrets["GROQ_API_KEY"]
     except Exception:
-        return os.getenv("GROQ_API_KEY")
+        return None
 
 # ================================
 # Header
@@ -39,7 +38,9 @@ st.caption(
     "Mandal-level enrolment prediction, anomaly detection & decision support"
 )
 
-if get_groq_api_key() and GROQ_AVAILABLE:
+API_KEY = get_groq_api_key()
+
+if API_KEY and GROQ_AVAILABLE:
     st.success("🟢 AI Assistant: ONLINE")
 else:
     st.info("🟡 AI Assistant: OFFLINE (dashboard insights still available)")
@@ -60,15 +61,14 @@ def anomaly_severity(current, avg):
 # AI Chatbot
 # ================================
 def groq_chatbot(question, context):
-    api_key = get_groq_api_key()
-    if not api_key or not GROQ_AVAILABLE:
+    if not API_KEY or not GROQ_AVAILABLE:
         return (
             "AI assistant is running in offline mode.\n\n"
-            "You can interpret predictions, risk scores and actions "
-            "directly from the dashboard insights above."
+            "You can interpret predictions, anomaly severity, "
+            "risk scores and actions directly from the dashboard."
         )
 
-    client = Groq(api_key=api_key)
+    client = Groq(api_key=API_KEY)
 
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
@@ -78,6 +78,7 @@ def groq_chatbot(question, context):
         ],
         temperature=0.4
     )
+
     return response.choices[0].message.content
 
 # ================================
@@ -147,7 +148,7 @@ st.success(
 )
 
 # ================================
-# 🔴 UPDATED ANOMALY SECTION (ONLY CHANGE)
+# 🚨 Anomaly Detection & Risk Analysis
 # ================================
 st.header("🚨 Anomaly Detection & Risk Analysis")
 
@@ -163,7 +164,7 @@ if anomalies.empty:
 else:
     st.error("⚠️ Anomalies Detected")
 
-    for _, row in anomalies.iterrows():
+    for _, row in anomalies.sort_values("date").iterrows():
         current_val = row["Total_Enrolments"]
         avg_val = mandal_avg[pincode]
 
@@ -184,7 +185,7 @@ else:
                 "Temporary centre shutdowns, technical failures, "
                 "staff shortage or seasonal low demand."
             )
-            actions = "No immediate action required."
+            actions = "Continue monitoring and routine optimisation."
 
         with st.container(border=True):
             st.markdown(
